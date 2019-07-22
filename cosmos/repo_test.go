@@ -1,7 +1,6 @@
 package cosmos
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -12,13 +11,13 @@ func TestRepo(t *testing.T) {
 	const REPO_STUB = `{
 	  "packages": [
 	    {
-	      "packagingVersion": "4.0",
+	      "packagingVersion": "2.0",
 	      "name": "Foo",
 	      "description": "Some package",
 	      "version": "1.0"
 	    },
 	    {
-	      "packagingVersion": "4.0",
+	      "packagingVersion": "3.0",
 	      "name": "Foo",
 	      "description": "Some package",
 	      "version": "1.1"
@@ -28,6 +27,12 @@ func TestRepo(t *testing.T) {
 	      "name": "Foo",
 	      "description": "Some package",
 	      "version": "1.2"
+	    },
+	    {
+	      "packagingVersion": "5.0",
+	      "name": "Foo",
+	      "description": "Some package",
+	      "version": "1.3"
 	    }
 	  ]
 	}`
@@ -65,8 +70,8 @@ func TestRepo(t *testing.T) {
 		t.Errorf("Error locating package versions: %s", err.Error())
 		return
 	}
-	if len(pkgs) != 3 {
-		t.Errorf("Find wrong number of packages")
+	if len(pkgs) != 4 {
+		t.Errorf("Found wrong number of packages")
 		return
 	}
 
@@ -78,6 +83,20 @@ func TestRepo(t *testing.T) {
 	}
 	if pkgs[2].GetVersion() != "1.2" {
 		t.Errorf("Invalid package #2 version")
+	}
+	if pkgs[3].GetVersion() != "1.3" {
+		t.Errorf("Invalid package #3 version")
+	}
+
+	// Find latest
+	pkg, err = repo.FindLatestPackageVersion("Foo")
+	if err != nil {
+		t.Errorf("Error locating latest version: %s", err.Error())
+		return
+	}
+	if pkg.GetVersion() != "1.3" {
+		t.Errorf("Found wrong version: %s", pkg.GetVersion())
+		return
 	}
 
 }
@@ -104,5 +123,7 @@ func TestUniverse(t *testing.T) {
 	}
 
 	// Print package description
-	fmt.Println(pkg.GetDescription())
+	if pkg.GetDescription() == "" {
+		t.Errorf("Encountered empty description")
+	}
 }

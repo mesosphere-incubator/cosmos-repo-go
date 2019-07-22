@@ -2,11 +2,38 @@ package cosmos
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
 type CosmosRepositoryImpl struct {
 	Packages []CosmosPackage
+}
+
+/**
+ * Try our best to parse the given version string
+ */
+func fuzzyVersionParse(version string) uint64 {
+	var ret uint64 = 0
+	versionGroups := strings.SplitN(version, "-", 2)
+
+	versionFragments := strings.Split(versionGroups[0], ".")
+	for i, ver := range versionFragments {
+
+		// Consider only the first 5(!) components
+		if i > 5 {
+			break
+		}
+
+		value, err := strconv.Atoi(ver)
+		if err != nil {
+			value = 0
+		}
+
+		ret |= uint64(value) << uint64(12*(5-i))
+	}
+
+	return ret
 }
 
 func (r *CosmosRepositoryImpl) FindAllPackageVersions(name string) ([]CosmosPackage, error) {
@@ -26,6 +53,24 @@ func (r *CosmosRepositoryImpl) FindPackageVersion(name string, version string) (
 		}
 	}
 	return nil, fmt.Errorf("Package not found")
+}
+
+func (r *CosmosRepositoryImpl) FindLatestPackageVersion(name string) (CosmosPackage, error) {
+	var foundVersion uint64
+	var found CosmosPackage = nil
+
+	for _, pkg := range r.Packages {
+		if pkg.GetName() == name {
+
+			version := fuzzyVersionParse(pkg.GetVersion())
+			if found == nil || version > foundVersion {
+				foundVersion = version
+				found = pkg
+			}
+		}
+	}
+
+	return found, nil
 }
 
 /**
