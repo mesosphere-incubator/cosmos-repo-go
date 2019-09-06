@@ -35,6 +35,11 @@ func NewRepoFromURL(url string) (CosmosRepository, error) {
 	}
 	request.Header.Add("Accept-Encoding", "gzip")
 
+	// Make sure we have the bare minimum headers required by the universe convert
+	// script, in order to be able to read convert URLs
+	request.Header.Add("Accepts", "application/json; version=v3")
+	request.Header.Add("User-Agent", "CosmosRepoGo/1.0 (dcos/1.13)")
+
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to place request: %s", err.Error())
